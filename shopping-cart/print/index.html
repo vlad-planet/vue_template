@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Vue-PRN</title>
+  <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>TEST PRN</title>
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.css">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.2.3/paper.css"> -->
+    <style>
+
+
+    </style>
+</head>
+
+<body>
+    <div id="app">
+       {{lim.fullname}}
+        <div class="noprint">
+            rows/page &nbsp;<input type="number" v-model="perpage" /><br/>
+            Items &nbsp; <input type="number" v-model="additem" />
+          <button @click="additems">Additem</button>
+            <br/>
+            <select @change="changecss" v-model="pagesize">
+              <option disabled value="">Please select one</option>
+                <option>A3</option>
+                <option>A3 landscape</option>
+                <option selected>A4</option>
+                <option>A4 landscape</option>
+                <option>A5</option>
+                <option>A5 landscape</option>
+            </select>
+            <span>Selected: {{ pagesize }}</span><br />
+            <button  @click="printpage">Printing</button>
+        </div>
+        <printing 
+            :items="items"
+            :master="master"
+            v-bind:perpage="perpage"
+            :columns="columns"
+            :calfield="calfield"
+            :sumtotal="sumtotal"
+            :vatrate="vatrate"
+            :calcuvat="calcuvat"
+            :calculatotal="calculatotal"
+            :pagesize="pagesize"
+            >              
+            </printing>
+    </div>
+    <template id="printing-template">
+       <div v-bind:class="[pageclass, prinonly]">
+            <section v-if="pages.length > 0" class="sheet padding-10mm printonly"  v-for="(itms,idx) in pages" >
+    	        <div v-show="istrue" class="header-block">
+    		        <div class="clear">
+    		            <div class="column2">
+    		                <h3>{{master.repname}} #{{master.billno}}</h3>
+    		                <p><b>Bill Date :</b> {{today}}</p>
+    		            </div>
+    		            <div>
+    		                <div class="column2 align-right">
+    		                    <p style="left:0px;margin-top:5px;"><b>status :</b> ได้รับเงิน</p>
+    		                    <p style="left:0px;"><b>tacking code :</b>{{master.tackingcode}}</p>
+    		                    <p v-if="pages.length > 1 " style="left:0px;"><b>page :</b> {{idx+1}}/{{pages.length}}</p>
+    		                </div>
+    		            </div>
+    		        </div>
+    		        <div class="clear">
+    	                <div class="column2" style="margin-bottom: 5px;">
+    	                    <span><b>customer:</b></span>
+    	                    <span>{{master.name}}</span>
+    	                </div>
+    	                <div class="column2">
+    	                    <span><b>line id:</b></span>
+    	                    <span>{{master.line}}</span>
+    	                </div>
+                	</div>
+    	            <div class="clear">
+    	                <div class="column2">
+    	                    <span><b>address1:</b></span>
+    	                    <span>{{master.address1}}</span>
+    	                </div>
+    	                <div class="column2">
+    	                    <span><b>facebook:</b></span>
+    	                    <span>{{master.facebook}}</span>
+    	                </div>
+    	            </div>            
+    	            <div class="clear">
+    	                <div class="column2">
+    	                    <span><b>address2:</b></span>
+    	                    <span>{{master.address2}}</span>
+    	                </div>
+    	                <div class="column2">
+    	                    <span><b>email:</b></span>
+    	                    <span>{{master.email}}</span>
+    	                </div>               
+    	                <div class="column2">
+    	                    <span><b>province:</b></span>
+    	                    <span>{{master.province}}</span>
+    	                </div>
+    	                <div class="column2">
+    	                    <span><b>tel :</b></span>
+    	                    <span>{{master.tel}}</span>
+    	                </div>
+    	                <div class="column2">
+    	                <span><b>zipcode:</b></span>
+    	                    <span>{{master.zipcode}}</span>
+    	                </div>
+    	                <div class="column2">
+    	                    <span><b></b></span>
+    	                    <span></span>
+    	                </div>
+    	            </div>
+    	        </div>
+    	        <div class="body-block" v-bind:style="{ padding: '15px', height: bodyblockheight + 'mm' }" >
+    	            <div class="block-tborder">
+    	                <table >
+    	                    <thead>
+    	                        <tr>
+                                    <th class="align-center" style="width:50px;">#</th>
+    	                            <th v-for="col in columns" v-bind:class="col.classname">{{col.label}}</th>
+    	                           <!--  <th class="align-left">SKU</th>
+    	                            <th class="align-left">สินค้า</th>
+    	                            <th class="align-right">ราคา (฿) / หน่วย</th>
+    	                            <th class="align-center" style="width:50px;">จำนวน</th>
+    	                            <th class="align-right">ราคารวม (฿)</th> -->
+    	                        </tr>
+    	                    </thead>
+    	                    <tbody>
+    	                        <tr v-for="(item,index) in itms">
+                                    <td class="align-center">{{index+1}}</td>
+    	                            <td v-for="col in columns" v-bind:class="col.classname">{{calfield(item,col)}}</td>
+
+
+    	          <!--                   <td class="align-left">{{item.id}}</td>
+    	                            <td class="align-left">
+    	                                {{item.name}}
+    	                            </td>
+    	                            <td class="align-right">{{item.price}}</td>
+    	                            <td class="align-center">1</td>
+    	                            <td class="align-right">{{item.price}}</td> -->
+    	                        </tr>
+    	                    </tbody>
+    		            <tfoot  v-show="(idx+1)==pages.length">
+    		                        <tr class="border-bottom">
+    		                            <td colspan="5" class="align-right"><b>รวม</b></td>
+    		                            <td class="align-right">{{sumtotal(items)}}</td>
+    		                        </tr>
+    		                        <tr>
+    		                            <td colspan="5" class="align-right">vat {{master.vatrate.toLocaleString('th-TH', {minimumFractionDigits: decimal })}}%</td>
+    		                            <td class="align-right">{{vat}}</td>
+    		                        </tr>
+                                    <!--<tr>
+    		                            <td colspan="5" class="align-right">Kerry Express (100.00 กรัม)</td>
+    		                            <td class="align-right">35.00</td>
+    		                        </tr>-->		                        
+                                    <tr class="border-top">
+    		                            <td colspan="3" class="align-right">
+    		                            </td>
+    		                            <td colspan="2" class="align-right" style="font-size: 16px;"><b>Total : </b></td>
+    		                            <td class="align-right" style="font-size: 16px;"><b>{{calculatotal(items)}}</b></td>
+    		                        </tr>
+    		            </tfoot>
+    		            </table>
+    	            	<div v-show="(idx+1)==pages.length" class="block-note">
+    	                	<h4>Note:</h4>
+    	                	<div class="note">{{master.note}}</div>
+    	            	</div>
+    	        	</div>
+    	        </div>
+            	<div class="footer-block">
+            		<b>ชื่อผู้ซื้อ</b>
+            	</div>
+            	<small style="float:right; padding-right: 15px">print@: {{now}} copyright © 2017 by ServIT. thongchai@servit.co.th</small>
+            </section>
+            <section v-show="pages.length === 0" class="sheet padding-10mm printonly" >
+                    No Items for Print
+            </section>
+
+       </div>       
+    </template>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/vue-resource/dist/vue-resource.min.js"></script>
+</body>
+</html>
+<!-- partial -->
+  <script  src="./script.js"></script>
+
+</body>
+</html>
